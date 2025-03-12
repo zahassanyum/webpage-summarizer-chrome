@@ -1,6 +1,14 @@
 import OpenAI from 'openai';
 import { getSettings } from './settings';
 
+interface StoredSummary {
+    summary: string;
+    timestamp: number;
+}
+
+const JINA_API_BASE = "https://r.jina.ai";
+const OPENAI_MODEL = "gpt-4o";
+
 // Helper: Get the URL of the active tab.
 export function getActiveTabUrl(): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -12,11 +20,6 @@ export function getActiveTabUrl(): Promise<string> {
       }
     });
   });
-}
-
-interface StoredSummary {
-  summary: string;
-  timestamp: number;
 }
 
 // Save summary to chrome storage
@@ -53,7 +56,7 @@ export async function clearStoredSummary(url: string) {
 
 // Fetch the formatted markdown from the Jina API.
 export async function fetchFormattedMarkdown(url: string): Promise<string> {
-  const apiUrl = `https://r.jina.ai/${encodeURIComponent(url)}`;
+  const apiUrl = `${JINA_API_BASE}/${encodeURIComponent(url)}`;
   const response = await fetch(apiUrl);
 
   if (!response.ok) {
@@ -77,7 +80,7 @@ export async function fetchSummary(markdown: string): Promise<string> {
   });
 
   const response = await openai.chat.completions.create({
-    model: "gpt-4",
+    model: OPENAI_MODEL,
     messages: [
       {
         role: "system",
@@ -98,12 +101,12 @@ export async function fetchSummary(markdown: string): Promise<string> {
 export async function summarizeCurrentTab(): Promise<{ summary: string; error?: string }> {
   try {
     const url = await getActiveTabUrl();
-    console.log("Active tab URL:", url);
+    console.log("Processing URL:", url);
 
     // Check if we have a stored summary
     const stored = await getStoredSummary(url);
     if (stored) {
-      console.log("Using stored summary");
+      console.log("Using cached summary");
       return { summary: stored.summary };
     }
 

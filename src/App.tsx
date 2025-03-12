@@ -6,8 +6,8 @@ import { summarizeCurrentTab, clearStoredSummary, getActiveTabUrl } from './util
 const SummaryCard = ({ content }: { content: string }) => {
   return (
     <div className="w-[560px] h-auto mx-auto shadow-md overflow-hidden bg-white">
-      <div className="bg-sky-100 pb-4 p-6">
-        <h3 className="text-lg font-bold">Summary</h3>
+      <div className="bg-orange-100 pb-4 p-6">
+        <h3 className="text-lg font-bold">Webpage Summary</h3>
       </div>
       <div className="p-6 text-[16px]">
         <div 
