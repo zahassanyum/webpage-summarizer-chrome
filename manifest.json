@@ -18,14 +18,5 @@
       "128": "src/assets/icon128.png"
     }
   },
-  "background": {
-    "service_worker": "./src/background/background.ts"
-  },
-  "options_page" : "src/optionsPage/optionsPage.html",
-  "content_scripts": [
-    {
-      "js": ["src/content/content.tsx"],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  "options_page" : "src/options-page/options-page.html"
 }
