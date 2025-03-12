@@ -1,45 +1,67 @@
+import { useEffect, useState } from 'react'
+import { marked } from 'marked'
 import './App.css'
+import { summarizeCurrentTab, clearStoredSummary, getActiveTabUrl } from './utils/summarizer'
 
-function App() { // start bilding your popup app here 
+const SummaryCard = ({ content }: { content: string }) => {
   return (
-    <SummaryCard 
-      title="Summary" 
-      content="This is a custom summary content that can be changed dynamically." 
-      points={[
-        "First key point",
-        "Second key detail",
-        "Final recommendation"
-      ]}
-    />
-  )
-}
-
-interface SummaryCardProps {
-  title?: string;
-  content: string;
-  points?: string[];
-}
-
-const SummaryCard = ({ title = "Summary", content, points = [] }: SummaryCardProps) => {
-  return (
-    <div className="w-[540px] h-auto text-[14px] mx-auto rounded-lg shadow-md overflow-hidden bg-white">
-      <div className="bg-sky-100 pb-4 p-4">
-        <h2 className="text-lg font-bold">{title}</h2>
+    <div className="w-[560px] h-auto mx-auto shadow-md overflow-hidden bg-white">
+      <div className="bg-sky-100 pb-4 p-6">
+        <h3 className="text-lg font-bold">Summary</h3>
       </div>
-      <div className="p-6">
-        <p className="text-muted-foreground">{content}</p>
-        <ul className="mt-4 space-y-2">
-          {points.map((point, index) => (
-            <li key={index} className="flex items-start">
-              <span className="mr-2 text-primary">•</span>
-              <span>{point}</span>
-            </li>
-          ))}
-        </ul>
+      <div className="p-6 text-[16px]">
+        <div 
+          dangerouslySetInnerHTML={{ __html: marked(content) }}
+        />
       </div>
     </div>
   );
-};
+}
+
+function App() {
+  const [summary, setSummary] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+
+  const getSummary = async (clearStorage: boolean = false) => {
+    setIsLoading(true)
+    if (clearStorage) {
+      const url = await getActiveTabUrl();
+      await clearStoredSummary(url);
+    }
+    const result = await summarizeCurrentTab()
+    setIsLoading(false)
+    if (result.error) {
+      setError(result.error)
+    } else {
+      setSummary(result.summary)
+    }
+  }
+
+  useEffect(() => {
+    getSummary()
+  }, [])
+
+  return (
+    <div>
+      <SummaryCard 
+        content={isLoading ? "Summarizing the webpage..." : (error || summary)}
+      />
+      {!isLoading && (
+        <div className="text-center mt-4 mb-2">
+          <button 
+            onClick={() => getSummary(true)}
+            className="text-sm text-blue-500 hover:text-blue-700 hover:underline mb-3"
+            disabled={isLoading}
+          >
+            ↻ Regenerate summary
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 
 
 export default App

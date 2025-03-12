@@ -1,8 +1,7 @@
-function ContentApp() { // start building your content view here, like any other normal react app
-  return (
-    <>
-    </>
-  )
+import Panel from './Panel'
+
+function ContentApp() {
+  return <Panel />
 }
 
 export default ContentApp
