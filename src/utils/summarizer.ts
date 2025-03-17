@@ -60,13 +60,13 @@ export async function fetchFormattedMarkdown(url: string): Promise<string> {
   const response = await fetch(apiUrl);
 
   if (!response.ok) {
-    throw new Error("Failed to fetch formatted markdown from Jina API");
+    throw new Error("Failed to fetch formatted markdown from Jina API: " + response.statusText);
   }
   return await response.text();
 }
 
 // Send the markdown content to OpenAI's API for summarization.
-export async function fetchSummary(markdown: string): Promise<string> {
+export async function fetchSummary(markdown: string, onData: (chunk: string) => void): Promise<void> {
   const settings = await getSettings();
   const apiKey = settings.apiKey;
 
@@ -91,14 +91,17 @@ export async function fetchSummary(markdown: string): Promise<string> {
         content: `${settings.prompt}:\n\n---\n\n${markdown}`
       }
     ],
-    temperature: 0.7
+    temperature: 0.7,
+    stream: true // Enable streaming
   });
 
-  return response.choices[0].message.content || '';
+  for await (const chunk of response) {
+    onData(chunk.choices[0].delta.content || '');
+  }
 }
 
 // Main function to handle the entire process.
-export async function summarizeCurrentTab(): Promise<{ summary: string; error?: string }> {
+export async function summarizeCurrentTab(onData: (chunk: string) => void) {
   try {
     const url = await getActiveTabUrl();
     console.log("Processing URL:", url);
@@ -107,24 +110,24 @@ export async function summarizeCurrentTab(): Promise<{ summary: string; error?: 
     const stored = await getStoredSummary(url);
     if (stored) {
       console.log("Using cached summary");
-      return { summary: stored.summary };
+      onData(stored.summary);
+      return;
     }
 
     const markdown = await fetchFormattedMarkdown(url);
     console.log("Formatted markdown:", markdown);
 
-    const summary = await fetchSummary(markdown);
+    let summary = '';
+    await fetchSummary(markdown, (chunk) => {
+      summary += chunk;
+      onData(chunk); // Pass each chunk to the onData callback
+    });
     console.log("Summary:", summary);
 
     // Save the summary
     await saveSummary(url, summary);
-
-    return { summary };
   } catch (error) {
     console.error(error);
-    return { 
-      summary: "",
-      error: error instanceof Error ? error.message : 'An unknown error occurred' 
-    };
+    return;
   }
 }

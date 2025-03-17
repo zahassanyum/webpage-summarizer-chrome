@@ -2,9 +2,27 @@
 /* Although this templates comes preconfigured with tailwind css for faster ui development */
 
 li {
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    list-style-type: disc;
+    margin-left: 14px;
 }
 
 p {
-    margin-bottom: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+@keyframes fadeInChunk {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.chunk-fade-in {
+  display: inline;
+  white-space: pre-line;
+  overflow: hidden;
+  animation: fadeInChunk 0.3s ease-out forwards;
 }
